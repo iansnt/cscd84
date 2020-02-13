@@ -275,9 +275,10 @@ int utilityValue = 0;
 		smallest = distance;
 	 }
  }
+ // we are at cheese, shorter paths to cheese are better
+ if (smallest == 0) return 1000 - depth*0.01;
  utilityValue -= smallest;
- // less moves to cheese = better moves to cheese
- utilityValue -= 0.01*depth;
+
  // it's bad if you're surrounded by walls
  int index = mouse_loc[0][0] + mouse_loc[0][1]*32;
  int numWalls = 0;
@@ -297,6 +298,8 @@ int utilityValue = 0;
 	 }
  }
  utilityValue += smallest;
+ // if the cat is really close then have it dominate over cheese direction
+ if (smallest < 5) utilityValue -= (25 - smallest*5);
 
  return utilityValue;
 }

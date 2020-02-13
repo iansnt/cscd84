@@ -185,7 +185,7 @@ double helper(double gr[graph_size][4], int path[1][2], double minmax_cost[size_
  if(maxDepth == depth || checkForTerminal(mouse_loc, cat_loc, cheese_loc, cats, cheeses)){
 	 double loc_utility = utility(cat_loc, cheese_loc, mouse_loc, cats, cheeses, depth, gr);
 	 minmax_cost[mouse_loc[0][0]][mouse_loc[0][1]] = loc_utility;
-	 return loc_utility - depth*0.01;
+	 return loc_utility;
  }
  else if(agentId != 0){
 	int next_move = (agentId == cats)? 0:agentId++;
@@ -276,7 +276,8 @@ int utilityValue = 0;
 	 }
  }
  utilityValue -= smallest;
-
+ // less moves to cheese = better moves to cheese
+ utilityValue -= 0.01*depth;
  // it's bad if you're surrounded by walls
  int index = mouse_loc[0][0] + mouse_loc[0][1]*32;
  int numWalls = 0;

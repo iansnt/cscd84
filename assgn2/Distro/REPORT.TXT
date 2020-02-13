@@ -10,17 +10,17 @@ mark.
 
 ________________________________________________
 
-Student Name 1 (last, first):
+Student Name 1 (last, first): Ajiteshwar Rai
 
-Student Name 2 (last, first):
+Student Name 2 (last, first): Alex Green
 
-Student number 1:
+Student number 1: 1003587647
 
-Student number 2:
+Student number 2: 1003096990
 
-UTORid 1:
+UTORid 1: raiajite
 
-UTORid 2:
+UTORid 2: greenal5
 
 READ THIS AND SIGN YOUR NAME AT THE END:
 
@@ -28,7 +28,7 @@ READ THIS AND SIGN YOUR NAME AT THE END:
 honesty and plaguarism. All work submitted as part
 of this assignment is my own.
 
-	Signed: _(student 1 name here)__	_(student 2 name here)__
+	Signed: _Ajiteshwar Rai__	_Alex Green__
 
 
 (-5 marks for failing to provide the identifying
@@ -47,6 +47,8 @@ but explain carefully when needed.
 2 .- (2 marks) Ignoring computation time, what is the effect of
      search depth (number of turns) on the chances of the mouse
      winning the game. 
+     
+     The higher the depth, the more likely the mouse was of finding a terminal node and getting the cheese.
 
 3 .- (2 marks) What situations will cause your mouse to lose?
      can these be fixed either with the utility function, or

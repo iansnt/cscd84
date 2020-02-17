@@ -154,14 +154,17 @@ double MiniMax(double gr[graph_size][4], int path[1][2], double minmax_cost[size
  ********************************************************************************************************/
 
  // Stub so that the code compiles/runs - This will be removed and replaced by your code!
+ // I'm gonna keep this cuz just in case
  path[0][0] = mouse_loc[0][0];
  path[0][1] = mouse_loc[0][1];
+ // create a variable to keep track of the mouses last move
  int prev_loc = mouse_loc[0][0]+mouse_loc[0][1]*32;
  double best_utility = helper(gr, path, minmax_cost, cat_loc, cats, cheese_loc, cheeses, mouse_loc, mode, utility, 0, 0, maxDepth, alpha, beta, prev_loc);
  return best_utility;
 }
 
 int getMoveIndex(int direction,int x, int y){
+	// quick function to use in loops to get all direction squares
 	if(direction == 0){
 		return x + (y-1)*32;
 	}
@@ -177,6 +180,7 @@ int getMoveIndex(int direction,int x, int y){
 }
 
 double helper(double gr[graph_size][4], int path[1][2], double minmax_cost[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, double (*utility)(int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, int depth, double gr[graph_size][4]), int agentId, int depth, int maxDepth, double alpha, double beta, int prev_loc){
+ // Setting the alpha and beta values
  if(depth == 0){
  	alpha = -1000;
  	beta = 1000;
@@ -187,39 +191,55 @@ double helper(double gr[graph_size][4], int path[1][2], double minmax_cost[size_
 	 minmax_cost[mouse_loc[0][0]][mouse_loc[0][1]] = loc_utility;
 	 return loc_utility;
  }
+ // if it's a cats turn
  else if(agentId != 0){
+	// see who gets to move next
 	int next_move = (agentId == cats)? 0:agentId++;
+	// working with indexes is just easier
 	int curr_cat_loc = cat_loc[agentId-1][0] + (cat_loc[agentId-1][1]*size_X);
 	int cat_loc_temp[10][2];
 	double utility_results = -1000;
+	// copy the cat locations so we can edit it them
 	memcpy(cat_loc_temp, cat_loc, sizeof(int)*20);
 	for(int i = 0; i < 4; i++){
+		// get index where the cat will move
 		int new_loc = getMoveIndex(i, cat_loc[agentId-1][0], cat_loc[agentId-1][1]);
 		if(gr[curr_cat_loc][i] == 1){
+			// change the cat location to pass to the next recursive step
 			cat_loc_temp[agentId-1][0] = new_loc%32;
 			cat_loc_temp[agentId-1][1] = new_loc/32;
+			//recurse with next agent to move given where cat moved now
 			utility_results = helper(gr, path, minmax_cost, cat_loc_temp, cats, cheese_loc, cheeses, mouse_loc, mode, utility, next_move, depth + 1, maxDepth, alpha, beta, prev_loc);
+			// if value achieved is lower than current lowest, update
 			if(utility_results < beta) beta = utility_results;
+			// if we are doing pruning just check if we would even go down this path
 			if(mode == 1 && beta <= alpha){
 				return beta;
 			}
 		}
 	}
+	// return whatever the lowest value was
 	return beta;
  }
- else { 
+ // if mouse
+ else {
 	int mouse_loc_index = mouse_loc[0][0] + mouse_loc[0][1]*32;
 	double utility_results = -1000;
 	int mouse_loc_temp[1][2];
+	// copy the mouse location to pass into recursive steps
+	mouse_loc_temp[0][0] = mouse_loc[0][0];
+	mouse_loc_temp[0][1] = mouse_loc[0][1];
 	for(int i = 0; i < 4; i++){
+		// get index of next move
 		int new_loc = getMoveIndex(i, mouse_loc[0][0], mouse_loc[0][1]);
 		if(gr[mouse_loc_index][i] == 1){
+			// if valid move then check it
 			mouse_loc_temp[0][0] = new_loc%32;
 			mouse_loc_temp[0][1] = new_loc/32;
-			utility_results = helper(gr, path, minmax_cost, cat_loc, cats, cheese_loc, cheeses, mouse_loc_temp, mode, utility, 1, depth + 1, maxDepth, alpha, beta, mouse_loc_index);
-			if(new_loc == prev_loc){
-				utility_results-=15;
-			}
+			// if we just moved back to where we were then discourage that
+			if(new_loc == prev_loc) utility_results-=15;
+			else utility_results = helper(gr, path, minmax_cost, cat_loc, cats, cheese_loc, cheeses, mouse_loc_temp, mode, utility, 1, depth + 1, maxDepth, alpha, beta, mouse_loc_index);
+			// keep the highest amount and if at the first iteration then update path
 			if(utility_results > alpha){
 				alpha = utility_results;
 				if(depth == 0){
@@ -227,16 +247,14 @@ double helper(double gr[graph_size][4], int path[1][2], double minmax_cost[size_
 					path[0][1] = mouse_loc_temp[0][1];
 				}
 			}
+			// for alpha-beta pruning, exit if the beta value is lower because cat would never choose this path
 			if(mode == 1 && beta <= alpha){
 				minmax_cost[mouse_loc[0][0]][mouse_loc[0][1]] = alpha;
 				return alpha;
 			}
 		}
 	}
-	// if(depth == 0){
-	// 	path[0][0] = mouse_loc_temp[0][0];
-	// 	path[0][1] = mouse_loc_temp[0][1];
-	// }
+	// update the minimax location to get those colors
 	minmax_cost[mouse_loc[0][0]][mouse_loc[0][1]] = alpha;
 	return alpha;
  }
@@ -291,7 +309,7 @@ int utilityValue = 0;
  // being far from cat is better
  smallest = 100000;
  for (int i = 0; i < cats; i++) {
-	 // manhattan distance between location and cheese
+	 // manhattan distance between location and cat
 	 distance = abs(mouse_loc[0][0] - cat_loc[i][0]) + abs(mouse_loc[0][1] - cat_loc[i][1]);
 	 if (distance < smallest) {
 		smallest = distance;
@@ -300,7 +318,6 @@ int utilityValue = 0;
  utilityValue += smallest;
  // if the cat is really close then have it dominate over cheese direction
  if (smallest < 5) utilityValue -= (25 - smallest*5);
-
  return utilityValue;
 }
 

@@ -44,9 +44,16 @@ but explain carefully when needed.
      a single, meaningful value. Convince us that your utility
      makes sense!
 
+     The utility first checks how close to the closest cheese the next location is, and subtracts the manhattan distance
+     because this will incentivice going in the direction that lowers distance to cheese. Then we look at how close the
+     closest cat is, and add the manhattan distance, so places that are further from a cat will have a higher value.
+     Lastly, we give lower utility to squares that are surrounded by walls, because those are dead ends and we do not want
+     to go there unless there is cheese there. Edge cases that are also considered are if the cheese is in that spot, then
+     we return a very high value, unless there is a cat very close, then we want to prioritize running from the cat.
+
 2 .- (2 marks) Ignoring computation time, what is the effect of
      search depth (number of turns) on the chances of the mouse
-     winning the game. 
+     winning the game.
      
      The higher the depth, the more likely the mouse was of finding a terminal node and getting the cheese.
 
@@ -54,16 +61,31 @@ but explain carefully when needed.
      can these be fixed either with the utility function, or
      by changing the search depth? if so, how?
 
+     If the mouse is surrounded by cats in all possible directions then he will lose, this cannot be fixed
+     because its a losing situation no matter what move is made.
+     Mouse will also lose sometimes when the cats move randomly, because it will keep thinking they are playing optimally
+     so it will choose moves in a basically random fashion too, so it will never get the cheese. This can be fixed by increasing
+     the search depth, because then the mouse will know where the cheese is.
+
 4 .- (2 marks) Compare cats with smartness=.8 against cats with
      smartness=1 - which are harder for your mouse to beat?
      why do you think that is?
+     
+     The lower the difficulty the harder it is for the mouse to win, because the mouse is always assuming the
+     cats are making optimal moves, but if they move at random then the mouse will go to a spot it thinks is
+     the best, but then the cat could randomly move to a different one and mess up the path.
 
 5 .- (2 marks) Can the mouse be made unbeatable by having an
      optimal utility function?
+     No there are still cases where the mouse just does not have a winning strategy. The utility function only tells
+     how optimal a move is, it doesn't create optimal moves, so if the mouse is trapped to begin with, it will still
+     die.
 
 6 .- (2 bonus marks) Could a human playing the game in place
       of the mouse do better than your code? (yes, no, and
       a reasonable explanation of why)
+      Yes, the mouse is reliant on the cat to make it move and does not do much if the cat is far away as all paths
+      are pretty safe, but a human can realize that when the cat is far you can do a lot and go for the cheese.
 
 _____________________________________________________
 
@@ -73,12 +95,12 @@ doesn't work, or what problems exist.
 	
 	Complete/Working	Partial		Not done
 
-Utility
+Utility      x
  function
 
-MiniMax
+MiniMax      x
 
-Alpha/Beta
+Alpha/Beta   x
  pruning
 _____________________________________________________
 

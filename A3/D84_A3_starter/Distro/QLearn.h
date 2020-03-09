@@ -30,7 +30,7 @@
 #define lambda .5			// Discount rate for future rewards
 #define max_graph_size 32*32
 
-#define numFeatures 2			// UPDATE THIS to be the number of features you have
+#define numFeatures 6			// UPDATE THIS to be the number of features you have
 
 // Function prototypes for D84 - Unit 3 - Reinforcement Learning
 void QLearn_update(int s, int a, double r, int s_new, double *QTable);
@@ -73,4 +73,24 @@ inline int getMoveIndex(int direction, int x, int y, int size_X){
 		return (x-1) + y*size_X;
 	}
 }
+
+inline void getLocation(int direction, int x, int y, int *new_x, int *new_y)
+{
+	*new_x = x;
+	*new_y = y;
+	if (direction == 0) {
+		*new_y -= 1;
+		return;
+	} else if (direction == 1) {
+		*new_x += 1;
+		return;
+	} else if (direction == 2) {
+		*new_y += 1;
+		return;
+	} else {
+		*new_x -= 1;
+		return;
+	}
+}
 #endif
+

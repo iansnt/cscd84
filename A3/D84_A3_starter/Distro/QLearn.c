@@ -247,8 +247,23 @@ void feat_QLearn_update(double gr[max_graph_size][4],double weights[25], double 
   
    /***********************************************************************************************
    * TO DO: Complete this function
-   ***********************************************************************************************/        
-      
+   ***********************************************************************************************/
+  double qsa;
+  double qsPrimea;
+  double difference;
+  double features[25];
+
+  evaluateFeatures(gr, features, mouse_pos, cats, cheeses, size_X, graph_size);
+
+  qsa = Qsa(weights, features);
+  int whoCares;
+  maxQsa(gr, weights, mouse_pos, cats, cheeses, size_X, graph_size, &qsPrimea, &whoCares);
+  
+
+  difference = reward + lambda * qsPrimea - qsa;
+  for (int i = 0; i < numFeatures; i++) {
+    weights[i] += alpha * difference * features[i];
+  }
 }
 
 int feat_QLearn_action(double gr[max_graph_size][4],double weights[25], int mouse_pos[1][2], int cats[5][2], int cheeses[5][2], double pct, int size_X, int graph_size)
@@ -269,10 +284,32 @@ int feat_QLearn_action(double gr[max_graph_size][4],double weights[25], int mous
 
   /***********************************************************************************************
    * TO DO: Complete this function
-   ***********************************************************************************************/        
-
-  return(0);		// <--- replace this while you're at it!
-
+   ***********************************************************************************************/
+  int state = (mouse_pos[0][0] + (mouse_pos[0][1] * size_X)) + ((cats[0][0] + (cats[0][1] * size_X)) * graph_size) + ((cheeses[0][0] + (cheeses[0][1] * size_X)) * graph_size * graph_size);
+  int mouseIdx = coordToIndex(mouse_pos[0][0], mouse_pos[0][1], size_X);
+  // stores the moves that we might want to take for random decision later on
+  int validMoves[4];
+  int numValidMoves = 0;
+  // index of the chosen move in validMoves
+  int moveIdx;
+  // roll die to see if we're using random direction or following QTable
+  double randVar = (double)rand() / RAND_MAX;
+  if (randVar > pct) { // random move
+    for (int i = 0; i < 4; i++) {
+      if (gr[mouseIdx][i] == 1) { // any move that isn't a wall is valid
+        validMoves[numValidMoves] = i;
+        numValidMoves++;
+      }
+    }
+    // Pick a move
+    moveIdx = numValidMoves * ((double)(rand() / RAND_MAX));
+    moveIdx = moveIdx >= numValidMoves ? numValidMoves - 1 : moveIdx; // prevent out of bounds indexing
+    return validMoves[moveIdx];
+  } else { // follow QTable
+    double whoCares;
+    maxQsa(gr, weights, mouse_pos, cats, cheeses, size_X, graph_size, &whoCares, &moveIdx);
+    return moveIdx;
+  }
 }
 
 void evaluateFeatures(double gr[max_graph_size][4],double features[25], int mouse_pos[1][2], int cats[5][2], int cheeses[5][2], int size_X, int graph_size)
@@ -294,8 +331,69 @@ void evaluateFeatures(double gr[max_graph_size][4],double features[25], int mous
 
    /***********************************************************************************************
    * TO DO: Complete this function
-   ***********************************************************************************************/      
-   
+   ***********************************************************************************************/
+  // 0 am I eaten by cat
+  features[0] = 0;
+  for (int i = 0; i < 5; i++) {
+    if (cats[i][0] == -1) { // we've gone through all cats
+      break;
+    }
+    if (cats[i][0] == mouse_pos[0][0] && cats[i][1] == mouse_pos[0][1]) {
+      features[0] = 1;
+    }
+  }
+
+  // 1 manhattan distance to closest cat
+  int distance;
+  int closest = 10000;
+  for (int i = 0; i < 5; i++) {
+    if (cats[i][0] == -1) { // we've gone through all cats
+      break;
+    }
+    distance = abs(mouse_pos[0][0] - cats[i][0]) + abs(mouse_pos[0][1] - cats[i][1]);
+    if (distance < closest) {
+      closest = distance;
+    }
+  }
+  features[1] = 1 / (closest + 1);
+
+  // 2 cat is very close
+  features[2] = closest < 5 ? 1 / (closest * closest + 1) : 0;
+
+  // 3 am I eat the cheese
+  features[3] = 0;
+  for (int i = 0; i < 5; i++) {
+    if (cheeses[i][0] == -1) { // we've gone through all cheese
+      break;
+    }
+    if (cheeses[i][0] == mouse_pos[0][0] && cheeses[i][1] == mouse_pos[0][1]) {
+      features[3] = 1;
+    }
+  }
+
+  // 4 manhattan distance to closest cheese
+  closest = 10000;
+  for (int i = 0; i < 5; i++) {
+    if (cheeses[i][0] == -1) { // we've gone through all cats
+      break;
+    }
+    distance = abs(mouse_pos[0][0] - cheeses[i][0]) + abs(mouse_pos[0][1] - cheeses[i][1]);
+    if (distance < closest) {
+      closest = distance;
+    }
+  }
+  features[4] = 1 / (closest + 1);
+
+  // 5 in dead end
+  features[5] = 0;
+  int index = coordToIndex(mouse_pos[0][0], mouse_pos[0][1], size_X);
+  int numWalls = 0;
+  for (int i = 0; i < 4; i++) {
+    numWalls += 1 - gr[index][i];
+  }
+  if (numWalls == 3) {
+    features[5] = 1;
+  }
 }
 
 double Qsa(double weights[25], double features[25])
@@ -306,9 +404,14 @@ double Qsa(double weights[25], double features[25])
 
   /***********************************************************************************************
   * TO DO: Complete this function
-  ***********************************************************************************************/  
-  
-  return(0);		// <--- stub! compute and return the Qsa value
+  ***********************************************************************************************/
+  double qsa = 0;
+  for (int i = 0; i < numFeatures; i++)
+  {
+    qsa += weights[i] * features[i];
+  }
+
+  return qsa;
 }
 
 void maxQsa(double gr[max_graph_size][4],double weights[25],int mouse_pos[1][2], int cats[5][2], int cheeses[5][2], int size_X, int graph_size, double *maxU, int *maxA)
@@ -324,11 +427,35 @@ void maxQsa(double gr[max_graph_size][4],double weights[25],int mouse_pos[1][2],
  
    /***********************************************************************************************
    * TO DO: Complete this function
-   ***********************************************************************************************/  
- 
-  *maxU=0;	// <--- stubs! your code will compute actual values for these two variables!
-  *maxA=0;
-  return;
+   ***********************************************************************************************/
+ int mouseIdx = coordToIndex(mouse_pos[0][0], mouse_pos[0][1], size_X);
+ double features[25];
+ double qsa;
+ int fake_mouse[1][2];
+ // stores the moves that we might want to take for random decision later on
+ int validMoves[4];
+ int numValidMoves = 0;
+ double largest = -100000000;
+ for (int i = 0; i < 4; i++)
+ {
+   getLocation(i, mouse_pos[0][0], mouse_pos[0][1], fake_mouse[0], fake_mouse[0]+1);
+   evaluateFeatures(gr, features, fake_mouse, cats, cheeses, size_X, graph_size);
+   qsa = Qsa(weights, features);
+   if (gr[mouseIdx][i] == 1 && qsa >= largest) { // only largest value moves are valid
+     if (qsa > largest) { // if new largest then invalidate all old moves
+       largest = qsa;
+       numValidMoves = 0;
+     }
+     validMoves[numValidMoves] = i;
+     numValidMoves++;
+   }
+ }
+ // Pick a move
+ int moveIdx = numValidMoves * ((double)(rand() / RAND_MAX));
+ moveIdx = moveIdx >= numValidMoves ? numValidMoves - 1 : moveIdx; // prevent out of bounds indexing
+ *maxU = largest;
+ *maxA = validMoves[moveIdx];
+ return;
    
 }
 

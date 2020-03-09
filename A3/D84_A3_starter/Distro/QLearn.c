@@ -228,7 +228,7 @@ double QLearn_reward(double gr[max_graph_size][4], int mouse_pos[1][2], int cats
 	distance = abs(mouse_pos[0][0] - cats[0][0]) + abs(mouse_pos[0][1] - cats[0][1]);
   utilityValue += distance;
   // if the cat is really close then have it dominate over cheese direction
-  if (distance < 5) utilityValue -= (25 - distance*5);
+  // if (distance < 5) utilityValue -= (25 - distance*5);
 
   return utilityValue;
 }
@@ -305,7 +305,7 @@ int feat_QLearn_action(double gr[max_graph_size][4],double weights[25], int mous
     moveIdx = numValidMoves * ((double)(rand() / RAND_MAX));
     moveIdx = moveIdx >= numValidMoves ? numValidMoves - 1 : moveIdx; // prevent out of bounds indexing
     return validMoves[moveIdx];
-  } else { // follow QTable
+  } else { // follow Qsa
     double whoCares;
     maxQsa(gr, weights, mouse_pos, cats, cheeses, size_X, graph_size, &whoCares, &moveIdx);
     return moveIdx;
@@ -355,10 +355,11 @@ void evaluateFeatures(double gr[max_graph_size][4],double features[25], int mous
       closest = distance;
     }
   }
-  features[1] = 1 / (closest + 1);
+  features[1] = closest / (2 * size_X);
 
   // 2 cat is very close
-  features[2] = closest < 5 ? 1 / (closest * closest + 1) : 0;
+  features[2] = closest < 5 ? 0.2 * closest : 0;
+  // features[2] = 0;
 
   // 3 am I eat the cheese
   features[3] = 0;
@@ -382,7 +383,7 @@ void evaluateFeatures(double gr[max_graph_size][4],double features[25], int mous
       closest = distance;
     }
   }
-  features[4] = 1 / (closest + 1);
+  features[4] = closest / (2 * size_X);
 
   // 5 in dead end
   features[5] = 0;
